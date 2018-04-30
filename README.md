@@ -40,15 +40,15 @@ The code for HOG and color features extractions is contained in [features_extrac
 
 First we need to read in the training images, below is an example. 
 
-<img src="https://github.com/lipeng2/CarND-VehicleDetection-P5/blob/master/examples/car_not_car.png" width="500">
+<img src="https://github.com/lipeng2/CarND-VehicleDetection-P5/blob/master/examples/car_not_car.png" width="400">
 
 
 Then we extract the HOG and color features, using `Hog` function from skimage package, and generate a histogram of color channels of the given image. Example shown below.
 
 <div>
-  <img src="https://github.com/lipeng2/CarND-VehicleDetection-P5/blob/master/output_images/Figure_1.png" width="200">
-  <img src="https://github.com/lipeng2/CarND-VehicleDetection-P5/blob/master/output_images/hog.png" width="200"> 
-  <img src="https://github.com/lipeng2/CarND-VehicleDetection-P5/blob/master/output_images/color.png" width="200">
+  <img src="https://github.com/lipeng2/CarND-VehicleDetection-P5/blob/master/output_images/Figure_1.png" width="220">
+  <img src="https://github.com/lipeng2/CarND-VehicleDetection-P5/blob/master/output_images/hog.png" width="220"> 
+  <img src="https://github.com/lipeng2/CarND-VehicleDetection-P5/blob/master/output_images/color.png" width="220">
 </div>
 
 Performing the same features extraction on each of training data, and append them to create features data for training a linear SVM classifier. Before using the features data to trian our model, the features need to be normalized so that the model can be more robust. 
@@ -65,7 +65,7 @@ We supply the features data obtained from step one to train our linear SVM model
 
 The implementation is contained in [window_search.py](https://github.com/lipeng2/CarND-VehicleDetection-P5/blob/master/window_search.py).
 
-Tp implement sliding windows, we just need to first define the starting and stopping positions, the desired size of windows to search for, and the window overlapping rate. To illustrate the idea, we can use the implemented function `slide_window(img, x_start_stop=[None, None], y_start_stop=[None, None], xy_window=(64, 64), xy_overlap=(0, 0))`, we can generate the following result.  
+To implement sliding windows, we just need to first define the starting and stopping positions, the desired size of windows to search for, and the window overlapping rate. To illustrate the idea, we can use the implemented function `slide_window(img, x_start_stop=[None, None], y_start_stop=[None, None], xy_window=(64, 64), xy_overlap=(0, 0))`, we can generate the following result.  
 <img src="https://github.com/lipeng2/CarND-VehicleDetection-P5/blob/master/output_images/slide_windows.jpg" width="500">
 
 And then we extract the features using aforementioned feature extraction method from each window and feed it to the our trained classifier to see if the window contains vehicles. However, instead of extracting features from individual window, which can be computationally expensive, the HOG features are extracted for the entire image (or a selected area), and then the features are subsampled according to the size of the window. If the window is classified contained vehicles, then we save it to our result. Below is an example,
