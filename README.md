@@ -85,11 +85,25 @@ We can perform the same procedures with different window size and overlapping ra
   <img src="https://github.com/lipeng2/CarND-VehicleDetection-P5/blob/master/output_images/car_windows.png" width="500">
 </p>
 
-In addition, we create a heat map which is made by adding "heat" to all pixels within the windows where a positive detection is reported by our classifier. And the "heat" value is calculated as followed `heat = 1 + confidence scores * constant` given there is a positive detection, or `(test_prediction == 1)`. The confidence score, obtained using `SVM.decision_function`, represents the confidence of our classifier in positive detections. The higher the confidence score for the detection, the more likely the detection is a positive. Multiplying the confidence scores with an appropriate constant can significantly help us to distinguish false postives from the true positives. Lastly, we apply heat map threshold and use `scipy.ndimage.measurements.label` to generate one robust bounding box for each vehicle in the image, shown below.
+In addition, we create a heat map which is made by adding "heat" to all pixels within the windows where a positive detection is reported by our classifier. And the "heat" value is calculated as followed `heat = 1 + confidence scores * constant` given there is a positive detection, or `(test_prediction == 1)`. The confidence score, obtained using `SVM.decision_function`, represents the confidence of our classifier in positive detections. The higher the confidence score for the detection, the more likely the detection is positive. Multiplying the confidence scores with an appropriate constant can significantly help us to distinguish false postives from the true positives. Lastly, we apply heat map threshold and use `scipy.ndimage.measurements.label` to integrate all overlapping detection windows into one robust bounding box for each vehicle in the image, shown below.
 
 <img src="https://github.com/lipeng2/CarND-VehicleDetection-P5/blob/master/output_images/car_with_heat.jpg">
 
-In order to eliminate false positive, we can create a heat map, and apply a threshold to it to eliminate "weak" candidates using `get_heatmap` function.
+## Tracker Class
+
+The code for tracker class is contained in [Tracker_v2.py](https://github.com/lipeng2/CarND-VehicleDetection-P5/blob/master/Tracker_v2.py).
+```python
+def __init__(self):
+        '''
+        num_frames -- number of frames storing
+        heatmaps -- list of previous heatmaps
+        output_frames -- list of previous output frames
+        '''
+        self.num_frames = 20
+        self.heatmaps = deque([], maxlen=self.num_frames)
+        self.outputs_frames = deque([], maxlen=self.num_frames)
+```
+The Tracker class is used to track the heatmaps from the previous 20 frames. It enables us to produce average heatmaps over 20 frames, which can further eliminate false postives that only appear in a few frames while leviating issue of wobbly detections. Additionally, the Tracker class memorizes the 20 most recent average heatmaps in order to enhance the robustness of our pipeline. 
 
 
 ## Improvement
