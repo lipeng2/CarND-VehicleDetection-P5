@@ -72,9 +72,13 @@ And then we extract the features using aforementioned feature extraction method 
 
 <img src="https://github.com/lipeng2/CarND-VehicleDetection-P5/blob/master/output_images/search_window.png" width="500">
 
-We can perform the same procedures with different window size and overlapping rates to obtain a more robust result. Below is a result using xy_window of (64, 64), (96, 96) and (128,128) with overlapping rate of 25% in both x and y directions.
+We can perform the same procedures with different window size and overlapping rates to obtain a more robust result. Below is a result using xy_window of (64, 64), (96, 96) and (128,128) with overlapping rate of 25% in both x and y directions. 
 
-<img src="" width="500">
+<img src="https://github.com/lipeng2/CarND-VehicleDetection-P5/blob/master/output_images/car_windows.png" width="500">
+
+In addition, we create a heat map which is made by adding "heat" to all pixels within the windows where a positive detection is reported by our classifier. And the "heat" value is calculated as followed `heat = 1 + confidence scores * constant` given there is a positive detection, or `(test_prediction == 1)`. The confidence score, obtained using `SVM.decision_function`, represents the confidence of our classifier in positive detections. The higher the confidence score for the detection, the more likely the detection is a positive. Multiplying the confidence scores with an appropriate constant can significantly help us to distinguish false postives from the true positives. Lastly, we apply heat map threshold and use `scipy.ndimage.measurements.label` to generate one robust bounding box for each vehicle in the image, shown below.
+
+<img src="https://github.com/lipeng2/CarND-VehicleDetection-P5/blob/master/output_images/car_with_heat.jpg">
 
 In order to eliminate false positive, we can create a heat map, and apply a threshold to it to eliminate "weak" candidates using `get_heatmap` function.
 
