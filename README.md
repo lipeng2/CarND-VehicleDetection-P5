@@ -33,30 +33,35 @@ The goals / steps of this project are the following:
 * Run pipeline on a video stream
 
 
-### Histogram of Oriented Gradients
+## Histogram of Oriented Gradients
+
 
 The code for HOG and color features extractions is contained in [features_extraction.py](https://github.com/lipeng2/CarND-VehicleDetection-P5/blob/master/features_extraction.py). 
 
 First we need to read in the training images, below is an example. 
 
-<img src="https://github.com/lipeng2/CarND-VehicleDetection-P5/blob/master/output_images/Figure_1.png" width="600">
+<img src="https://github.com/lipeng2/CarND-VehicleDetection-P5/blob/master/examples/car_not_car.png" width="500">
+
 
 Then we extract the HOG and color features, using `Hog` function from skimage package, and generate a histogram of color channels of the given image. Example shown below.
 
 <div>
-  <img src="https://github.com/lipeng2/CarND-VehicleDetection-P5/blob/master/output_images/hog.png" width="350"> 
-  <img src="https://github.com/lipeng2/CarND-VehicleDetection-P5/blob/master/output_images/color.png" width="350">
+  <img src="https://github.com/lipeng2/CarND-VehicleDetection-P5/blob/master/output_images/Figure_1.png" width="200">
+  <img src="https://github.com/lipeng2/CarND-VehicleDetection-P5/blob/master/output_images/hog.png" width="200"> 
+  <img src="https://github.com/lipeng2/CarND-VehicleDetection-P5/blob/master/output_images/color.png" width="200">
 </div>
 
 Performing the same features extraction on each of training data, and append them to create features data for training a linear SVM classifier. Before using the features data to trian our model, the features need to be normalized so that the model can be more robust. 
 
-### Train Linearn SVM Classifier
+## Train Linearn SVM Classifier
+
 
 The code for training linear SVM is contained in [svm.py](https://github.com/lipeng2/CarND-VehicleDetection-P5/blob/master/svm.py). 
 
 We supply the features data obtained from step one to train our linear SVM model, and based on our empirical statistics, we found that using YUV color space, orietation=11, pix_per_cell=16, and cell_per_block=2 yields the best result, which the accuracy is achieved around 98.6%. In addition, we also augment the training images simply by flipping them horizontally using `cv2.flip`, and the accuracy of the model is able to improve to 99%. 
 
-### Sliding Windows
+## Sliding Windows
+
 
 The implementation is contained in [window_search.py](https://github.com/lipeng2/CarND-VehicleDetection-P5/blob/master/window_search.py).
 
@@ -72,3 +77,11 @@ We can perform the same procedures with different window size and overlapping ra
 <img src="" width="500">
 
 In order to eliminate false positive, we can create a heat map, and apply a threshold to it to eliminate "weak" candidates using `get_heatmap` function.
+
+
+## Improvement
+
+
+* One of the biggest problem with the pipeline is computaional time. Features extraction is extremely time consuming, and it will be difficult to deploy this pipeline to perform real-time vehicles detection. One of the solution can be using Deep learning model, where features extraction is not required. One example will be to use [YOLO](https://pjreddie.com/media/files/papers/yolo.pdf).
+
+* If not given enough data to train a deep neural network, we can still use SVM and features extraction. Once we have identified the vehicles in the video, we can devise a model to project where they are going to be in the next few frames based on their speed and the moving directions, and then we slide the windows accordingly. By doing so, we can reduce the number of times of doing features extractions and hypothetically speed up the pipeline performances several times. 
