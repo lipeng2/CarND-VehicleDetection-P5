@@ -20,15 +20,15 @@ Some example images for testing the pipeline on single frames are located in the
 
 The goals / steps of this project are the following:
 
-* Perform a Histogram of Oriented Gradients (HOG) and histogram of color features extraction on a labeled training set of images and train a classifier Linear SVM classifier
+* Perform a Histogram of Oriented Gradients (HOG) and histogram of color features extraction on a labeled datasets
 
-* Train a linearn SVM classifier
+* Train a linear SVM classifier
 
 * Implement a sliding window technique, and incorporates with the trained SVM classifier to search for vehicles in images
 
 * Use heat maps to reduce false positive detections
 
-* Implement a tracker class to keep tracking vehicles
+* Implement a tracker class to better track vehicles
 
 * Run pipeline on a video stream
 
@@ -51,41 +51,38 @@ Then we extract the HOG and color features, using `Hog` function from skimage pa
   <img src="https://github.com/lipeng2/CarND-VehicleDetection-P5/blob/master/output_images/color.png" width="240">
 </p>
 
-Performing the same features extraction on each of training data, and append them to create features data for training a linear SVM classifier. Before using the features data to trian our model, the features need to be normalized so that the model can be more robust. 
+Performing the same features extraction on all training data, and append them together to create features data for training our linear SVM classifier. Before model training, the features need to be normalized so that the model can be more robust. 
 
-## Train Linearn SVM Classifier
+## Train Linear SVM Classifier
 
 
 The code for training linear SVM is contained in [svm.py](https://github.com/lipeng2/CarND-VehicleDetection-P5/blob/master/svm.py). 
 
-We supply the features data obtained from step one to train our linear SVM model, and based on our empirical statistics, we found that using YUV color space, orietation=11, pix_per_cell=16, and cell_per_block=2 yields the best result, which the accuracy is achieved around 98.6%. In addition, we also augment the training images simply by flipping them horizontally using `cv2.flip`, and the accuracy of the model is able to improve to 99%. 
+We supply the features data obtained from step one to train our linear SVM model, and based on our empirical statistics, we found that using YUV color space, orietation=11, pix_per_cell=16, and cell_per_block=2 yields the best result, and the respective accuracy achieves around 98.6%. In addition, we augment the training images by flipping them horizontally using `cv2.flip`, and the accuracy of the model is further improve to 99%. 
 
 ## Sliding Windows
 
-
 The implementation is contained in [window_search.py](https://github.com/lipeng2/CarND-VehicleDetection-P5/blob/master/window_search.py).
 
-To implement sliding windows, we just need to first define the starting and stopping positions, the desired size of windows to search for, and the window overlapping rate. To illustrate the idea, we can use the implemented function `slide_window(img, x_start_stop=[None, None], y_start_stop=[None, None], xy_window=(64, 64), xy_overlap=(0, 0))`, we can generate the following result.
+To implement sliding windows, we need to define the starting and stopping positions, the desired size of windows to search for, and the window overlapping rate. To illustrate the idea, we can use the implemented function `slide_window(img, x_start_stop=[None, None], y_start_stop=[None, None], xy_window=(64, 64), xy_overlap=(0, 0))`, we can generate the following result.
 
 <p align="center">
   <img src="https://github.com/lipeng2/CarND-VehicleDetection-P5/blob/master/output_images/slide_windows.jpg" width="500">
 </p>
 
-And then we extract the features using aforementioned feature extraction method from each window and feed it to the our trained classifier to see if the window contains vehicles. However, instead of extracting features from individual window, which can be computationally expensive, the HOG features are extracted for the entire image (or a selected area), and then the features are subsampled according to the size of the window. If the window is classified contained vehicles, then we save it to our result. Below is an example,
-
+And then we extract the features using aforementioned feature extraction method from each window and feed it to the our trained classifier to detect vehicles. However, instead of extracting features from individual window, which can be computationally expensive, the HOG features are extracted for the entire image (or a selected area), and then the features are subsampled according to the size of the window. If the window is classified as containing vehicles, then we save it to our result. Example below,
 
 <p align="center">
   <img src="https://github.com/lipeng2/CarND-VehicleDetection-P5/blob/master/output_images/search_window.png" width="500">
 </p>
 
-We can perform the same procedures with different window size and overlapping rates to obtain a more robust result. Below is a result using xy_window of (64, 64), (96, 96) and (128,128) with overlapping rate of 25% in both x and y directions. 
-
+We can perform the same procedures with different window size and overlapping rates to obtain a more robust result. Below is an example using `slide_window(img, x_start_stop=[None, None], ystart_stop= [400,600], xy_windows = [(64, 64), (96, 96), (128,128)], xy_overlap=(0.25,0.25))`
 
 <p align="center">
   <img src="https://github.com/lipeng2/CarND-VehicleDetection-P5/blob/master/output_images/car_windows.png" width="500">
 </p>
 
-In addition, we create a heat map which is made by adding "heat" to all pixels within the windows where a positive detection is reported by our classifier. And the "heat" value is calculated as followed `heat = 1 + confidence scores * constant` given there is a positive detection, or `(test_prediction == 1)`. The confidence score, obtained using `SVM.decision_function`, represents the confidence of our classifier in positive detections. The higher the confidence score for the detection, the more likely the detection is positive. Multiplying the confidence scores with an appropriate constant can significantly help us to distinguish false postives from the true positives. Lastly, we apply heat map threshold and use `scipy.ndimage.measurements.label` to integrate all overlapping detection windows into one robust bounding box for each vehicle in the image, shown below.
+As shown in the previous example, there are a few false positives detections showing. To address false positives problem, we create a heat map which is made by adding "heat" to all pixels within the windows where a positive detection is reported by our classifier. And the "heat" value is calculated as followed `heat = 1 + confidence scores * constant` given there is a positive detection, `(test_prediction == 1)`. The confidence score, obtained using `SVM.decision_function`, represents the confidence of our classifier in positive detections. The higher the confidence score for the detection indicating higher probability that it is positive. Multiplying the confidence scores with an appropriate constant can significantly help us to distinguish false postives from the true positives as well. Lastly, we apply heat map threshold to eliminate false positive by doing `heatmap[heatmap<threshold] = 0`, and use `scipy.ndimage.measurements.label` to integrate all overlapping detection windows into one robust bounding box for each vehicle in the image, as shown below.
 
 <img src="https://github.com/lipeng2/CarND-VehicleDetection-P5/blob/master/output_images/car_with_heat.jpg">
 
@@ -105,9 +102,11 @@ def __init__(self):
 ```
 The Tracker class is used to track the heatmaps from the previous 20 frames. It enables us to produce average heatmaps over 20 frames, which can further eliminate false postives that only appear in a few frames while leviating issue of wobbly detections. Additionally, the Tracker class memorizes the 20 most recent average heatmaps in order to enhance the robustness of our pipeline. 
 
+## Result
+
+Here is the video [link](https://www.youtube.com/watch?v=toKVRCifSzU) to the final result.
 
 ## Improvement
-
 
 * One of the biggest problem with the pipeline is computaional time. Features extraction is extremely time consuming, and it will be difficult to deploy this pipeline to perform real-time vehicles detection. One of the solution can be using Deep learning model, where features extraction is not required. One example will be to use [YOLO](https://pjreddie.com/media/files/papers/yolo.pdf).
 
